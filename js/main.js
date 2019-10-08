@@ -1,15 +1,13 @@
 'use strict';
 
-var similarPictureTemplate = document.querySelector('#picture') // нахожу шаблон
-    .content
-    .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
-var picturesContainer = document.querySelector('.pictures'); // Маша, это и является аналогом фрагмента из прошлого задания?
-
 // константы-параметры фото
 
 var PICTURES_AMOUNT = 25;
 var MIN_LIKES = 15;
 var MAX_LIKES = 200;
+var AVATAR_MIN = 1;
+var AVATAR_MAX = 6;
+var NAMES = ['Иван', 'Хуан', 'Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
 var COMMENTS = [
   'Всё отлично!',
   'В целом всё неплохо. Но не всё.',
@@ -18,56 +16,81 @@ var COMMENTS = [
   'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
   'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'
 ];
+var DESCRIPTIONS = [
+  'Тестим новую камеру!',
+  'Затусили с друзьями на море',
+  'Как же круто тут кормят',
+  'Отдыхаем...',
+  'Цените каждое мгновенье. Цените тех, кто рядом с вами и отгоняйте все сомненья.',
+  'Не обижайте всех словами......',
+  'Вот это тачка!'
+];
 
-var PICTURE_URLS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
 
-// функции-генераторы случайных чисел
+// поиск DOM-элементов
 
-var getRandomArbitrary = function (min, max) { // функция, которая генерирует случайное число в определенном диапазоне (для лайков)
-  min = Math.ceil(min);
-  max = Math.floor(max);
+var similarPictureTemplate = document.querySelector('#picture') // нахожу шаблон
+    .content
+    .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
+var picturesContainer = document.querySelector('.pictures');
+
+// функция-генераторы случайных чисел
+
+var getRandomNumber = function (min, max) { // функция, которая генерирует случайное число в определенном диапазоне (для лайков)
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-var getRandomUrl = function (pictureUrls) { // функция, которая генерирует случайное число, которое не повторяется (для ссылок).
-  for (var i = pictureUrls; i < pictureUrls.length; i--) { // Маша, я брала пример из интернета отсюда https://stackoverflow.com/questions/15585216/how-to-randomly-generate-numbers-without-repetition-in-javascript но все равно не до конца поняла как его имплементировать
-    var randomUrlElement = pictureUrls.splice(Math.floor(Math.random() * (i + 1)), 1)[0];
-  }
-  return randomUrlElement;
-};
+// функции создания и модификации объектов
 
-var getRandomElement = function (elements) { // функция, которая просто вощвращает случайное число (для комментов) как в учебном задании
-  return elements[Math.floor(Math.random() * elements.length)]; // Маша, как сделать, чтобы комментов под фото могло быть два?
+var generateComment = function () { // Я не могу сообразить, нужны ли здесь и в след. функции параметры.
+  var userComment = []; // я всё время путаюсь, где я могу употреблять названия переменных по несколько раз. Если бы я здесь написала просто comment, могла ли я в следующей функции использовать это название но в других целях? ведь переменная внутри этой функции останется невидимой, верно?
+  for (var k = 0; k < getRandomNumber(1, 2); j++) {
+    var commentRandom = COMMENTS[getRandomNumber(0, COMMENTS.length - 1)];
+  }
+  return userComment.push(commentRandom);
+}
+
+var getComments = function () {
+  var comments = [];
+  for (var j = 0; j < getRandomNumber(1, COMMENTS.length); j++) { // Маша, ты писала, что чтобы определить число комментариев ты предлагаешь ограничиться длиной константы с комментариями и не заморачивать о проверке не повторяются ли они. Я правильно тебя поняла, указав в цикле COMMENTS.length?
+    var comment = {
+      avatar: '../img/avatar/' + getRandomNumber(AVATAR_MIN, AVATAR_MAX) + '.svg',
+      name: NAMES[getRandomNumber(0, NAMES.length - 1)],
+      message: generateComment()
+    };
+    comments.push(comment);
+  }
+  return comments;
 };
 
 var generatePictures = function (amount) {
-  var album = [];
+  var pictures = [];
   for (var i = 0; i < amount; i++) {
-    var photo = {
-      url: 'photos/' + getRandomUrl(PICTURE_URLS) + '.jpg',
-      description: '', // строка — описание фотографии
-      like: getRandomArbitrary(MIN_LIKES, MAX_LIKES),
-      comment: getRandomElement(COMMENTS)
+    var picture = {
+      url: 'photos/' + (i + 1) + '.jpg',
+      description: DESCRIPTIONS[getRandomNumber(0, DESCRIPTIONS.length - 1)],
+      like: getRandomNumber(MIN_LIKES, MAX_LIKES),
+      comment: getComments()
     };
-    album.push(photo);
+    pictures.push(picture);
   }
-  return album;
+  return pictures;
 };
 
 var pictures = generatePictures (PICTURES_AMOUNT);
 var createPicture = function (picture) {
   var pictureElement = similarPictureTemplate.cloneNode(true);
-  pictureElement.querySelector('.picture__img').src = photo.url; // Маша, почему-то линтер ругается на то, что я использую здесь photo. Я предполагаю, что это потому что я объявляла объект внутри функции, и эта функция не видит его. Но в прошлом домашнем задании в файле setup.js я делала аналогично, и всё проканало. Почему?
-  pictureElement.querySelector('.picture__comments').textContent = photo.comment;
-  pictureElement.querySelector('.picture__likes').textContent = photo.like;
+  pictureElement.querySelector('.picture__img').src = picture.url;
+  pictureElement.querySelector('.picture__comments').textContent = picture.comment.length;
+  pictureElement.querySelector('.picture__likes').textContent = picture.like;
 
   return pictureElement;
 };
 
-var renderAlbum = function (picturesFragment) {
+var renderPictures = function (picturesFragment) {
   picturesFragment.forEach(function (picture) {
     picturesContainer.appendChild(createPicture(picture));
   });
 };
 
-renderAlbum(pictures);
+renderPictures(pictures);
