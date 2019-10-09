@@ -2,11 +2,17 @@
 
 // константы-параметры фото
 
+var likes = {
+  MIN: 15,
+  MAX: 200
+};
+
+var avatarIndex = {
+  MIN: 1,
+  MAX: 6
+};
+
 var PICTURES_AMOUNT = 25;
-var MIN_LIKES = 15;
-var MAX_LIKES = 200;
-var AVATAR_MIN = 1;
-var AVATAR_MAX = 6;
 var NAMES = ['Иван', 'Хуан', 'Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
 var COMMENTS = [
   'Всё отлично!',
@@ -42,19 +48,22 @@ var getRandomNumber = function (min, max) { // функция, которая г
 
 // функции создания и модификации объектов
 
-var generateComment = function () { // Я не могу сообразить, нужны ли здесь и в след. функции параметры.
-  var userComment = []; // я всё время путаюсь, где я могу употреблять названия переменных по несколько раз. Если бы я здесь написала просто comment, могла ли я в следующей функции использовать это название но в других целях? ведь переменная внутри этой функции останется невидимой, верно?
-  for (var k = 0; k < getRandomNumber(1, 2); k++) {
+var generateComment = function () {
+  var comment = '';
+  var commentsNumber = getRandomNumber(1, 2);
+  for (var i = 0; i < commentsNumber; i++) {
     var commentRandom = COMMENTS[getRandomNumber(0, COMMENTS.length - 1)];
+    comment += commentRandom;
   }
-  return userComment.push(commentRandom);
+  return comment;
 };
 
 var getComments = function () {
   var comments = [];
-  for (var j = 0; j < getRandomNumber(1, COMMENTS.length); j++) { // Маша, ты писала, что чтобы определить число комментариев ты предлагаешь ограничиться длиной константы с комментариями и не заморачивать о проверке не повторяются ли они. Я правильно тебя поняла, указав в цикле COMMENTS.length?
+  var amount = getRandomNumber(1, COMMENTS.length);
+  for (var j = 0; j < amount; j++) {
     var comment = {
-      avatar: '../img/avatar/' + getRandomNumber(AVATAR_MIN, AVATAR_MAX) + '.svg',
+      avatar: '../img/avatar/' + getRandomNumber(avatarIndex.MIN, avatarIndex.MAX) + '.svg',
       name: NAMES[getRandomNumber(0, NAMES.length - 1)],
       message: generateComment()
     };
@@ -65,11 +74,11 @@ var getComments = function () {
 
 var generatePictures = function (amount) {
   var pictures = [];
-  for (var i = 0; i < amount; i++) {
+  for (var k = 0; k < amount; k++) {
     var picture = {
-      url: 'photos/' + (i + 1) + '.jpg',
+      url: 'photos/' + (k + 1) + '.jpg',
       description: DESCRIPTIONS[getRandomNumber(0, DESCRIPTIONS.length - 1)],
-      like: getRandomNumber(MIN_LIKES, MAX_LIKES),
+      like: getRandomNumber(likes.MIN, likes.MAX),
       comment: getComments()
     };
     pictures.push(picture);
@@ -88,10 +97,16 @@ var createPicture = function (picture) {
   return pictureElement;
 };
 
+// создаю фрагмент, добавляю в него картинки и всё разом в DOM
+
 var renderPictures = function (picturesFragment) {
+  var fragment = document.createDocumentFragment();
+
   picturesFragment.forEach(function (picture) {
-    picturesContainer.appendChild(createPicture(picture));
+    fragment.appendChild(createPicture(picture));
   });
+
+  picturesContainer.appendChild(fragment);
 };
 
 renderPictures(pictures);
