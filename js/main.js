@@ -44,11 +44,11 @@ var getRandomNumber = function (min, max) { // функция, которая г
 
 var generateComment = function () { // Я не могу сообразить, нужны ли здесь и в след. функции параметры.
   var userComment = []; // я всё время путаюсь, где я могу употреблять названия переменных по несколько раз. Если бы я здесь написала просто comment, могла ли я в следующей функции использовать это название но в других целях? ведь переменная внутри этой функции останется невидимой, верно?
-  for (var k = 0; k < getRandomNumber(1, 2); j++) {
+  for (var k = 0; k < getRandomNumber(1, 2); k++) {
     var commentRandom = COMMENTS[getRandomNumber(0, COMMENTS.length - 1)];
   }
   return userComment.push(commentRandom);
-}
+};
 
 var getComments = function () {
   var comments = [];
@@ -77,10 +77,11 @@ var generatePictures = function (amount) {
   return pictures;
 };
 
-var pictures = generatePictures (PICTURES_AMOUNT);
+var pictures = generatePictures(PICTURES_AMOUNT);
 var createPicture = function (picture) {
   var pictureElement = similarPictureTemplate.cloneNode(true);
   pictureElement.querySelector('.picture__img').src = picture.url;
+  pictureElement.querySelector('.picture__img').alt = picture.description;
   pictureElement.querySelector('.picture__comments').textContent = picture.comment.length;
   pictureElement.querySelector('.picture__likes').textContent = picture.like;
 
