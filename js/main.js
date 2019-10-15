@@ -39,6 +39,8 @@ var similarPictureTemplate = document.querySelector('#picture') // нахожу 
     .content
     .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
 var picturesContainer = document.querySelector('.pictures');
+var bigPicture = document.querySelector('big-picture'); // нахожу секцию с большими фото
+var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
 
 // функция-генераторы случайных чисел
 
@@ -71,6 +73,8 @@ var getComments = function () {
   }
   return comments;
 };
+
+var userComment = getComments();
 
 var generatePictures = function (amount) {
   var pictures = [];
@@ -110,3 +114,39 @@ var renderPictures = function (picturesFragment) {
 };
 
 renderPictures(pictures);
+
+// нахожу элемент
+bigPicture.classList.remove('hidden');
+
+bigPicture.querySelector('.big-picture__img').src = pictures[0].url;
+bigPicture.querySelector('.likes-count').textContent = pictures[0].like;
+bigPicture.querySelector('.comments-count.').textContent = pictures[0].comment.length;
+bigPicture.querySelector('.social__caption').textContent = pictures[0].description;
+
+// создаю в DOM элемент нужной мне структуры
+var getComment = function () {
+  var commentElement = document.createElement('li');
+  var commentElementImg = document.createElement('img');
+  var commentElementText = document.createElement('p');
+
+  commentElement.className = 'social__comment';
+  commentElementImg.className = 'social__picture';
+  commentElementText.className = 'social__text';
+
+  commentElementImg.src = userComment[0].avatar;
+  commentElementImg.alt = userComment[0].name;
+  commentElementText.textContent = userComment[0].message;
+
+  commentElement.appendChild(commentElementImg);
+  commentElement.appendChild(commentElementText);
+
+  return commentElement;
+};
+
+// прячу блок счётчика комментариев и блок загрузки новых комментариев
+bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
+bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
+
+// добавляю комментарии в нужный список
+bigPicturesContainer.appendChild(getComment);
+
