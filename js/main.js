@@ -39,7 +39,7 @@ var similarPictureTemplate = document.querySelector('#picture') // нахожу 
     .content
     .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
 var picturesContainer = document.querySelector('.pictures');
-var bigPicture = document.querySelector('big-picture'); // нахожу секцию с большими фото
+var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
 var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
 
 // функция-генераторы случайных чисел
@@ -120,7 +120,7 @@ bigPicture.classList.remove('hidden');
 
 bigPicture.querySelector('.big-picture__img').src = pictures[0].url;
 bigPicture.querySelector('.likes-count').textContent = pictures[0].like;
-bigPicture.querySelector('.comments-count.').textContent = pictures[0].comment.length;
+bigPicture.querySelector('.comments-count').textContent = pictures[0].comment.length;
 bigPicture.querySelector('.social__caption').textContent = pictures[0].description;
 
 // создаю в DOM элемент нужной мне структуры
