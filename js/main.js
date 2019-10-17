@@ -39,6 +39,7 @@ var similarPictureTemplate = document.querySelector('#picture') // нахожу 
     .content
     .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
 var picturesContainer = document.querySelector('.pictures');
+
 var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
 var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
 
