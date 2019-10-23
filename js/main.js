@@ -41,6 +41,7 @@ var similarPictureTemplate = document.querySelector('#picture') // нахожу 
 var picturesContainer = document.querySelector('.pictures');
 var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
 var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
+var commentTemplate = document.querySelector('#comment'); // нахожу шаблон
 
 // функция-генераторы случайных чисел
 
@@ -65,7 +66,7 @@ var getComments = function () {
   var amount = getRandomNumber(1, COMMENTS.length);
   for (var j = 0; j < amount; j++) {
     var comment = {
-      avatar: '../img/avatar/' + getRandomNumber(avatarIndex.MIN, avatarIndex.MAX) + '.svg',
+      avatar: 'img/avatar-' + getRandomNumber(avatarIndex.MIN, avatarIndex.MAX) + '.svg',
       name: NAMES[getRandomNumber(0, NAMES.length - 1)],
       message: generateComment()
     };
@@ -83,7 +84,7 @@ var generatePictures = function (amount) {
       url: 'photos/' + (k + 1) + '.jpg',
       description: DESCRIPTIONS[getRandomNumber(0, DESCRIPTIONS.length - 1)],
       like: getRandomNumber(likes.MIN, likes.MAX),
-      comment: getComments()
+      comment: getComments() // Маша, почему мне консколь выдаёт ошибку, если я здесь пишу вместо getComments() равноценный ему userComment, который я объявила выше?
     };
     pictures.push(picture);
   }
@@ -113,40 +114,42 @@ var renderPictures = function (picturesFragment) {
   picturesContainer.appendChild(fragment);
 };
 
-renderPictures(pictures);
+renderPictures(pictures); // Маша, мне нужно перенести все вызовы функций в конец? чтобы по критериям вначале кода было лишь объявление переменных?
 
-// нахожу элемент
-bigPicture.classList.remove('hidden');
-
-bigPicture.querySelector('.big-picture__img').src = pictures[0].url;
-bigPicture.querySelector('.likes-count').textContent = pictures[0].like;
-bigPicture.querySelector('.comments-count').textContent = pictures[0].comment.length;
-bigPicture.querySelector('.social__caption').textContent = pictures[0].description;
-
-// создаю в DOM элемент нужной мне структуры
+// создаю в DOM элемент нужной мне структуры {
 var getComment = function () {
-  var commentElement = document.createElement('li');
-  var commentElementImg = document.createElement('img');
-  var commentElementText = document.createElement('p');
+  for (var i = 0; i < userComment.length; i++) {
 
-  commentElement.className = 'social__comment';
-  commentElementImg.className = 'social__picture';
-  commentElementText.className = 'social__text';
+    var commentElement = commentTemplate.querySelector('li');
+    var commentElementImg = commentTemplate.querySelector('img');
+    var commentElementText = commentTemplate.querySelector('p');
 
-  commentElementImg.src = userComment[0].avatar;
-  commentElementImg.alt = userComment[0].name;
-  commentElementText.textContent = userComment[0].message;
+    commentElementImg.src = userComment[i].avatar;
+    commentElementImg.alt = userComment[i].name;
+    commentElementText.textContent = userComment[i].message;
 
-  commentElement.appendChild(commentElementImg);
-  commentElement.appendChild(commentElementText);
-
+    commentElement.appendChild(commentElementImg);
+    commentElement.appendChild(commentElementText);
+  }
   return commentElement;
 };
+
+bigPicture.classList.remove('hidden');
+
+// Маша, ты писала: открытие большой картинки - всё в отдельную функцию - туда передаем конкретную картинку - pictures[0] при вызове. Я правильно переписала?
+
+var openBigPicture = function (picture) {
+  bigPicture.querySelector('.big-picture__img').src = picture.url;
+  bigPicture.querySelector('.likes-count').textContent = picture.like;
+  bigPicture.querySelector('.comments-count').textContent = picture.comment.length;
+  bigPicture.querySelector('.social__caption').textContent = picture.description;
+};
+
+openBigPicture(pictures[0]);
 
 // прячу блок счётчика комментариев и блок загрузки новых комментариев
 bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
 bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
 
 // добавляю комментарии в нужный список
-bigPicturesContainer.appendChild(getComment);
-
+bigPicturesContainer.appendChild(getComment());
