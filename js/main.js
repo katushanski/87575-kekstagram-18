@@ -42,7 +42,9 @@ var picturesContainer = document.querySelector('.pictures');
 
 var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
 var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
-var commentTemplate = document.querySelector('#comment'); // нахожу шаблон
+var commentTemplate = document.querySelector('#comment')
+    .content
+    .querySelector('.social__comment');
 
 // функция-генераторы случайных чисел
 
@@ -62,7 +64,7 @@ var generateComment = function () {
   return comment;
 };
 
-var getComments = function () {
+var renderComments = function () {
   var comments = [];
   var amount = getRandomNumber(1, COMMENTS.length);
   for (var j = 0; j < amount; j++) {
@@ -76,8 +78,6 @@ var getComments = function () {
   return comments;
 };
 
-var userComment = getComments();
-
 var generatePictures = function (amount) {
   var pictures = [];
   for (var k = 0; k < amount; k++) {
@@ -85,25 +85,26 @@ var generatePictures = function (amount) {
       url: 'photos/' + (k + 1) + '.jpg',
       description: DESCRIPTIONS[getRandomNumber(0, DESCRIPTIONS.length - 1)],
       like: getRandomNumber(likes.MIN, likes.MAX),
-      comment: getComments() // Маша, почему мне консколь выдаёт ошибку, если я здесь пишу вместо getComments() равноценный ему userComment, который я объявила выше?
+      comments: renderComments()
     };
     pictures.push(picture);
   }
   return pictures;
 };
 
-var pictures = generatePictures(PICTURES_AMOUNT);
-var createPicture = function (picture) {
+var userPictures = generatePictures(PICTURES_AMOUNT);
+
+var createPicture = function (pictures) {
   var pictureElement = similarPictureTemplate.cloneNode(true);
-  pictureElement.querySelector('.picture__img').src = picture.url;
-  pictureElement.querySelector('.picture__img').alt = picture.description;
-  pictureElement.querySelector('.picture__comments').textContent = picture.comment.length;
-  pictureElement.querySelector('.picture__likes').textContent = picture.like;
+  pictureElement.querySelector('.picture__img').src = pictures.url;
+  pictureElement.querySelector('.picture__img').alt = pictures.description;
+  pictureElement.querySelector('.picture__comments').textContent = pictures.comments.length;
+  pictureElement.querySelector('.picture__likes').textContent = pictures.like;
 
   return pictureElement;
 };
 
-// создаю фрагмент, добавляю в него картинки и всё разом в DOM
+// создаю фрагмент с фотографиями, добавляю в него картинки и всё разом в DOM
 
 var renderPictures = function (picturesFragment) {
   var fragment = document.createDocumentFragment();
@@ -115,42 +116,39 @@ var renderPictures = function (picturesFragment) {
   picturesContainer.appendChild(fragment);
 };
 
-renderPictures(pictures); // Маша, мне нужно перенести все вызовы функций в конец? чтобы по критериям вначале кода было лишь объявление переменных?
+// создаю фрагмент с комментариями и добавляю его в DOM
+var getComments = function (comments) { // передали в функцию сгенерированные ранее комментарии
+  var fragment = document.createDocumentFragment(); // создали фрагмент
 
-// создаю в DOM элемент нужной мне структуры {
-var getComment = function () {
-  for (var i = 0; i < userComment.length; i++) {
+  comments.forEach(function (comment) { // используем цикл forEach тк идем по всей длине массива
+    var commentElement = commentTemplate.cloneNode(true); // склонировали элемент комментария
 
-    var commentElement = commentTemplate.querySelector('li');
-    var commentElementImg = commentTemplate.querySelector('img');
-    var commentElementText = commentTemplate.querySelector('p');
+    var commentImgElement = commentElement.querySelector('img'); // нашли элемент картинки внутри элемента комментария
+    var commentTextElement = commentElement.querySelector('p'); // нашли абзац
 
-    commentElementImg.src = userComment[i].avatar;
-    commentElementImg.alt = userComment[i].name;
-    commentElementText.textContent = userComment[i].message;
+    commentImgElement.src = comment.avatar; // используем укороченную запись, тк используем forEach и i не нужен
+    commentImgElement.alt = comment.name;
+    commentTextElement.textContent = comment.message;
 
-    commentElement.appendChild(commentElementImg);
-    commentElement.appendChild(commentElementText);
-  }
-  return commentElement;
+    fragment.appendChild(commentElement); // добавляем элемент комментария в фрагмент
+  });
+  return fragment; // возвращаем фрагмент со всеми добавленными комментариями
 };
 
+var openBigPicture = function (pictures) {
+  bigPicture.querySelector('.big-picture__img').src = pictures.url;
+  bigPicture.querySelector('.likes-count').textContent = pictures.like;
+  bigPicture.querySelector('.comments-count').textContent = pictures.comments.length;
+  bigPicture.querySelector('.social__caption').textContent = pictures.description;
+  bigPicturesContainer.appendChild(getComments(pictures.comments)); // добавляю комментарии в нужный список
+};
+
+renderPictures(userPictures);
+openBigPicture(userPictures[0]);
+
+// отображаю полноразмерное фото
 bigPicture.classList.remove('hidden');
-
-// Маша, ты писала: открытие большой картинки - всё в отдельную функцию - туда передаем конкретную картинку - pictures[0] при вызове. Я правильно переписала?
-
-var openBigPicture = function (picture) {
-  bigPicture.querySelector('.big-picture__img').src = picture.url;
-  bigPicture.querySelector('.likes-count').textContent = picture.like;
-  bigPicture.querySelector('.comments-count').textContent = picture.comment.length;
-  bigPicture.querySelector('.social__caption').textContent = picture.description;
-};
-
-openBigPicture(pictures[0]);
 
 // прячу блок счётчика комментариев и блок загрузки новых комментариев
 bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
 bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
-
-// добавляю комментарии в нужный список
-bigPicturesContainer.appendChild(getComment());
