@@ -1,6 +1,201 @@
 'use strict';
+var picturesContainer = document.querySelector('.pictures');
+var openUploadButton = picturesContainer.querySelector('.img-upload__control');
+var inputPhotoUpload = picturesContainer.querySelector('#upload-file');
+var closeUploadButton = picturesContainer.querySelector('.img-upload__cancel'); // Маша, лучше искать по id, если есть возможность? Или по классу норм?
+var imagePreview = picturesContainer.querySelector('.img-upload__preview');
+var defaultImage = imagePreview.children[0];
+var escKeyCode = 27;
 
-// константы-параметры фото
+// Загрузка изображения, открытие и закрытие формы редактирования
+var onPopupEscPress = function (evt) {
+  if (evt.target === hashtagsField) { // Маша, почему, если я делаю эту проверку в конце этой функции, а не в начале как сейчас, то Esc все равно закрывает форму, если фокус на поле хештегов?
+    return;
+  } else if (evt.target === commentsField) {
+    return;
+  }
+  if (isEscEvent(evt)) {
+    closeUpload();
+  }
+};
+
+var isEscEvent = function (evt) {
+  return evt.keyCode === escKeyCode;
+};
+
+var openUpload = function (evt) {
+  evt.preventDefault();
+  picturesContainer.querySelector('.img-upload__overlay').classList.remove('hidden');
+  document.addEventListener('keydown', onPopupEscPress);
+};
+
+var closeUpload = function () {
+  picturesContainer.querySelector('.img-upload__overlay').classList.add('hidden');
+  inputPhotoUpload.value = '';
+};
+
+openUploadButton.addEventListener('click', function () {
+  inputPhotoUpload.addEventListener('change', function (evt) {
+    evt.preventDefault();
+    openUpload(evt);
+    onImageClick();
+  });
+});
+
+closeUploadButton.addEventListener('click', function (evt) {
+  evt.preventDefault();
+  closeUpload();
+});
+
+// Применение эффекта для изображения
+var effectLevel = document.querySelector('.effect-level');
+// var sliderPin = effectLevel.querySelector('.effect-level__pin'); // ползунок
+var inputEffectLevel = effectLevel.querySelector('.effect-level__value');
+var effectsList = picturesContainer.querySelector('.effects__list');
+var filters = {
+  none: {
+    CLASS: 'effects__preview--none',
+    PROPERTY: 'none'
+  },
+  chrome: {
+    CLASS: 'effects__preview--chrome',
+    PROPERTY: 'grayscale',
+    MIN_VALUE: 0,
+    MAX_VALUE: 1,
+    UNIT: ''
+  },
+  sepia: {
+    CLASS: 'effects__preview--sepia',
+    PROPERTY: 'sepia',
+    MIN_VALUE: 0,
+    MAX_VALUE: 1,
+    UNIT: ''
+  },
+  marvin: {
+    CLASS: 'effects__preview--marvin',
+    PROPERTY: 'invert',
+    MIN_VALUE: 0,
+    MAX_VALUE: 100,
+    UNIT: '%'
+  },
+  phobos: {
+    CLASS: 'effects__preview--phobos',
+    PROPERTY: 'blur',
+    MIN_VALUE: 0,
+    MAX_VALUE: 3,
+    UNIT: 'px'
+  },
+  heat: {
+    CLASS: 'effects__preview--heat',
+    PROPERTY: 'brightness',
+    MIN_VALUE: 1,
+    MAX_VALUE: 3,
+    UNIT: ''
+  }
+};
+
+var effectRange = {
+  MIN: 0,
+  MAX: 100
+};
+
+var effectClassCheck = function () {
+  if (defaultImage.classList.length === 2) {
+    defaultImage.classList.remove(defaultImage.classList[0]);
+  }
+};
+
+var onImageClick = function () {
+  effectsList.addEventListener('click', function (evt) {
+    var targetImage = evt.target;
+    var effectRadio = targetImage.closest('input');
+    if (effectRadio) {
+      inputEffectLevel.value = effectRange.MAX;
+      defaultImage.classList.add(filters[effectRadio.value].CLASS);
+    } else {
+      return;
+    }
+    effectClassCheck();
+  });
+};
+
+/* Валидация хэштегов и отправка формы */
+var uploadForm = document.querySelector('.img-upload__form');
+var submitButton = uploadForm.querySelector('.img-upload__submit');
+var hashtagsField = document.querySelector('.text__hashtags');
+var hashtagValue = hashtagsField.value || '';
+var hashtagList = hashtagValue.split(' ');
+var hashtagParams = {
+  MIN: 2,
+  MAX: 20
+};
+var hashtagIsValid = true;
+var commentsField = document.querySelector('.text__description');
+
+// Функция находит два одинаковых элемента в массиве хэштегов
+var checkDuplicates = function (hashtags, hashtag) {
+  var duplicates = 0;
+  for (var i = 0; i < hashtagList.length; i++) {
+    if (hashtags[i].toLowerCase() === hashtag.toLowerCase()) {
+      duplicates++;
+    }
+  }
+  return duplicates;
+};
+// Функция валидации хэштегов
+var checkHashValidity = function () {
+  hashtagsField.addEventListener('invalid', function (evt) {
+    evt.preventDefault();
+    hashtagIsValid = true;
+    if (hashtagList.length <= 5) {
+      for (var i = 0; i < hashtagList.length; i++) {
+        if (hashtagList[i].length < hashtagParams.MIN && hashtagList[i].charAt(0) === '#') {
+          hashtagsField.setCustomValidity('Хеш-тег не может состоять только из одной решётки');
+          hashtagIsValid = false;
+          hashtagsField.style.outline = '3px solid red';
+          return;
+        } else if (hashtagList[i].charAt(0) === '#') {
+          hashtagsField.setCustomValidity('Хэш-тег должен начинаться с символа # (решётка)');
+          hashtagIsValid = false;
+          hashtagsField.style.outline = '3px solid red';
+          return;
+        } else if (checkDuplicates(hashtagList, hashtagList[i]) > 1) {
+          hashtagsField.setCustomValidity('Один и тот же хэш-тег не может быть использован дважды');
+          hashtagIsValid = false;
+          hashtagsField.style.outline = '3px solid red';
+        } else if (hashtagList[i].length > hashtagParams.MAX) {
+          hashtagsField.setCustomValidity('Максимальная длина одного хэш-тега 20 символов, включая решётку;');
+          hashtagIsValid = false;
+          hashtagsField.style.outline = '3px solid red';
+          return;
+        } else {
+          hashtagsField.setCustomValidity('');
+        }
+      }
+    } else {
+      hashtagsField.setCustomValidity('Нельзя указать больше пяти хэш-тегов;');
+      hashtagIsValid = false;
+      hashtagsField.style.outline = '3px solid red';
+      return;
+    }
+  });
+  return hashtagIsValid;
+};
+
+var onSubmitClick = function () {
+  uploadForm.addEventListener('submit', function (evt) {
+    if (!checkHashValidity()) { // Маша, мне тут по критериям нужно использовать тернарный оператор или он не используется в таких случаях?
+      evt.preventDefault();
+      hashtagsField.style.outline = '3px solid red';
+    } else {
+      hashtagsField.style.outline = '';
+    }
+  });
+};
+
+submitButton.addEventListener('click', onSubmitClick);
+
+// Отображение фотографий других пользователей, лайков и комментариев
 
 var likes = {
   MIN: 15,
@@ -38,7 +233,6 @@ var DESCRIPTIONS = [
 var similarPictureTemplate = document.querySelector('#picture') // нахожу шаблон
     .content
     .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
-var picturesContainer = document.querySelector('.pictures');
 
 var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
 var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
@@ -147,7 +341,7 @@ renderPictures(userPictures);
 openBigPicture(userPictures[0]);
 
 // отображаю полноразмерное фото
-bigPicture.classList.remove('hidden');
+/* bigPicture.classList.remove('hidden'); */
 
 // прячу блок счётчика комментариев и блок загрузки новых комментариев
 bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
