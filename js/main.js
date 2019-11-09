@@ -7,8 +7,11 @@ var imagePreview = picturesContainer.querySelector('.img-upload__preview');
 var defaultImage = imagePreview.children[0];
 var escKeyCode = 27;
 
-// Загрузка изображения, открытие и закрытие формы редактирования
-var onPopupEscPress = function (evt) {
+/*
+Загрузка изображения, открытие и закрытие формы редактирования
+*/
+
+var onEditWindowEscPress = function (evt) {
   if (evt.target === hashtagsField) { // Маша, почему, если я делаю эту проверку в конце этой функции, а не в начале как сейчас, то Esc все равно закрывает форму, если фокус на поле хештегов?
     return;
   } else if (evt.target === commentsField) {
@@ -26,7 +29,7 @@ var isEscEvent = function (evt) {
 var openUpload = function (evt) {
   evt.preventDefault();
   picturesContainer.querySelector('.img-upload__overlay').classList.remove('hidden');
-  document.addEventListener('keydown', onPopupEscPress);
+  document.addEventListener('keydown', onEditWindowEscPress);
 };
 
 var closeUpload = function () {
@@ -47,7 +50,10 @@ closeUploadButton.addEventListener('click', function (evt) {
   closeUpload();
 });
 
-// Применение эффекта для изображения
+/*
+Применение эффекта для изображения
+*/
+
 var effectLevel = document.querySelector('.effect-level');
 // var sliderPin = effectLevel.querySelector('.effect-level__pin'); // ползунок
 var inputEffectLevel = effectLevel.querySelector('.effect-level__value');
@@ -99,12 +105,14 @@ var effectRange = {
   MAX: 100
 };
 
+// Проверяю количество классов у изображения и удаляю лишний
 var effectClassCheck = function () {
   if (defaultImage.classList.length === 2) {
     defaultImage.classList.remove(defaultImage.classList[0]);
   }
 };
 
+// Добавляю проверку того, где произошёл клик и меняю фильтр
 var onImageClick = function () {
   effectsList.addEventListener('click', function (evt) {
     var targetImage = evt.target;
@@ -119,7 +127,10 @@ var onImageClick = function () {
   });
 };
 
-/* Валидация хэштегов и отправка формы */
+/*
+Валидация хэштегов и отправка формы
+*/
+
 var uploadForm = document.querySelector('.img-upload__form');
 var submitButton = uploadForm.querySelector('.img-upload__submit');
 var hashtagsField = document.querySelector('.text__hashtags');
@@ -132,7 +143,7 @@ var hashtagParams = {
 var hashtagIsValid = true;
 var commentsField = document.querySelector('.text__description');
 
-// Функция находит два одинаковых элемента в массиве хэштегов
+// Нахожу два одинаковых элемента в массиве хэштегов
 var checkDuplicates = function (hashtags, hashtag) {
   var duplicates = 0;
   for (var i = 0; i < hashtagList.length; i++) {
@@ -142,6 +153,7 @@ var checkDuplicates = function (hashtags, hashtag) {
   }
   return duplicates;
 };
+
 // Функция валидации хэштегов
 var checkHashValidity = function () {
   hashtagsField.addEventListener('invalid', function (evt) {
@@ -152,21 +164,17 @@ var checkHashValidity = function () {
         if (hashtagList[i].length < hashtagParams.MIN && hashtagList[i].charAt(0) === '#') {
           hashtagsField.setCustomValidity('Хеш-тег не может состоять только из одной решётки');
           hashtagIsValid = false;
-          hashtagsField.style.outline = '3px solid red';
           return;
         } else if (hashtagList[i].charAt(0) === '#') {
           hashtagsField.setCustomValidity('Хэш-тег должен начинаться с символа # (решётка)');
           hashtagIsValid = false;
-          hashtagsField.style.outline = '3px solid red';
           return;
         } else if (checkDuplicates(hashtagList, hashtagList[i]) > 1) {
           hashtagsField.setCustomValidity('Один и тот же хэш-тег не может быть использован дважды');
           hashtagIsValid = false;
-          hashtagsField.style.outline = '3px solid red';
         } else if (hashtagList[i].length > hashtagParams.MAX) {
           hashtagsField.setCustomValidity('Максимальная длина одного хэш-тега 20 символов, включая решётку;');
           hashtagIsValid = false;
-          hashtagsField.style.outline = '3px solid red';
           return;
         } else {
           hashtagsField.setCustomValidity('');
@@ -175,16 +183,16 @@ var checkHashValidity = function () {
     } else {
       hashtagsField.setCustomValidity('Нельзя указать больше пяти хэш-тегов;');
       hashtagIsValid = false;
-      hashtagsField.style.outline = '3px solid red';
       return;
     }
   });
   return hashtagIsValid;
 };
 
+// Добавляю слушатель события на кнопку "Опубликовать"
 var onSubmitClick = function () {
   uploadForm.addEventListener('submit', function (evt) {
-    if (!checkHashValidity()) { // Маша, мне тут по критериям нужно использовать тернарный оператор или он не используется в таких случаях?
+    if (!checkHashValidity()) {
       evt.preventDefault();
       hashtagsField.style.outline = '3px solid red';
     } else {
@@ -195,18 +203,18 @@ var onSubmitClick = function () {
 
 submitButton.addEventListener('click', onSubmitClick);
 
-// Отображение фотографий других пользователей, лайков и комментариев
+/*
+Отображение фотографий других пользователей, лайков и комментариев
+*/
 
 var likes = {
   MIN: 15,
   MAX: 200
 };
-
 var avatarIndex = {
   MIN: 1,
   MAX: 6
 };
-
 var PICTURES_AMOUNT = 25;
 var NAMES = ['Иван', 'Хуан', 'Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
 var COMMENTS = [
@@ -227,27 +235,29 @@ var DESCRIPTIONS = [
   'Вот это тачка!'
 ];
 
-
-// поиск DOM-элементов
-
-var similarPictureTemplate = document.querySelector('#picture') // нахожу шаблон
+// нахожу шаблон и элемент, который буду клонировать
+var similarPictureTemplate = document.querySelector('#picture')
     .content
-    .querySelector('.picture'); // нахожу элемент, в который буду вставлять похожие фото
-
-var bigPicture = document.querySelector('.big-picture'); // нахожу секцию с большими фото
-var bigPicturesContainer = bigPicture.querySelector('.social__comments'); // список, куда буду вставлять комменты
+    .querySelector('.picture');
+// нахожу все миниатюры изображений
+var bigPictureThumbnails = document.querySelectorAll('.picture');
+// нахожу секцию с полноразмерными фото
+var bigPicture = document.querySelector('.big-picture');
+// Х-кнопка закрытия полноразмерного фото
+var bigPictureCloseButton = bigPicture.querySelector('.big-picture__cancel');
+// список, куда буду вставлять комменты
+var commentsContainer = bigPicture.querySelector('.social__comments');
+// шаблон коммента
 var commentTemplate = document.querySelector('#comment')
     .content
     .querySelector('.social__comment');
 
-// функция-генераторы случайных чисел
-
-var getRandomNumber = function (min, max) { // функция, которая генерирует случайное число в определенном диапазоне (для лайков)
+// функция, которая генерирует случайное число в определенном диапазоне (для лайков)
+var getRandomNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-// функции создания и модификации объектов
-
+// Генерирую строку, состоящую из одного или двух комментариев
 var generateComment = function () {
   var comment = '';
   var commentsNumber = getRandomNumber(1, 2);
@@ -258,6 +268,7 @@ var generateComment = function () {
   return comment;
 };
 
+// Создаю массив с полноценными комментариями, состоящих из текста и параметров пользователя (аватар, имя)
 var renderComments = function () {
   var comments = [];
   var amount = getRandomNumber(1, COMMENTS.length);
@@ -272,6 +283,7 @@ var renderComments = function () {
   return comments;
 };
 
+// Создаю функцию для создания массива с другими фотографиями
 var generatePictures = function (amount) {
   var pictures = [];
   for (var k = 0; k < amount; k++) {
@@ -286,6 +298,7 @@ var generatePictures = function (amount) {
   return pictures;
 };
 
+// Создаю массив с другими фотографиями
 var userPictures = generatePictures(PICTURES_AMOUNT);
 
 var createPicture = function (pictures) {
@@ -298,8 +311,7 @@ var createPicture = function (pictures) {
   return pictureElement;
 };
 
-// создаю фрагмент с фотографиями, добавляю в него картинки и всё разом в DOM
-
+// Создаю фрагмент с фотографиями, добавляю в него картинки и всё разом - в DOM
 var renderPictures = function (picturesFragment) {
   var fragment = document.createDocumentFragment();
 
@@ -310,39 +322,99 @@ var renderPictures = function (picturesFragment) {
   picturesContainer.appendChild(fragment);
 };
 
-// создаю фрагмент с комментариями и добавляю его в DOM
+// Создаю фрагмент с комментариями и добавляю его в DOM
 var getComments = function (comments) { // передали в функцию сгенерированные ранее комментарии
   var fragment = document.createDocumentFragment(); // создали фрагмент
-
-  comments.forEach(function (comment) { // используем цикл forEach тк идем по всей длине массива
-    var commentElement = commentTemplate.cloneNode(true); // склонировали элемент комментария
-
-    var commentImgElement = commentElement.querySelector('img'); // нашли элемент картинки внутри элемента комментария
-    var commentTextElement = commentElement.querySelector('p'); // нашли абзац
-
-    commentImgElement.src = comment.avatar; // используем укороченную запись, тк используем forEach и i не нужен
+  // используем цикл forEach тк идем по всей длине массива
+  comments.forEach(function (comment) {
+    // склонировали элемент комментария
+    var commentElement = commentTemplate.cloneNode(true);
+    // нашли элемент картинки внутри элемента комментария
+    var commentImgElement = commentElement.querySelector('img');
+    // нашли абзац
+    var commentTextElement = commentElement.querySelector('p');
+    // используем укороченную запись, тк используем forEach и i не нужен
+    commentImgElement.src = comment.avatar;
     commentImgElement.alt = comment.name;
     commentTextElement.textContent = comment.message;
-
-    fragment.appendChild(commentElement); // добавляем элемент комментария в фрагмент
+    // добавляем элемент комментария в фрагмент
+    fragment.appendChild(commentElement);
   });
-  return fragment; // возвращаем фрагмент со всеми добавленными комментариями
+  // возвращаем фрагмент со всеми добавленными комментариями
+  return fragment;
 };
 
+// Заполняю полноразмерное фото информацией про адрес изображения, к-во лайков, комментариев, добавляю описание.
 var openBigPicture = function (pictures) {
   bigPicture.querySelector('.big-picture__img').src = pictures.url;
   bigPicture.querySelector('.likes-count').textContent = pictures.like;
   bigPicture.querySelector('.comments-count').textContent = pictures.comments.length;
   bigPicture.querySelector('.social__caption').textContent = pictures.description;
-  bigPicturesContainer.appendChild(getComments(pictures.comments)); // добавляю комментарии в нужный список
+  commentsContainer.appendChild(getComments(pictures.comments));
 };
 
 renderPictures(userPictures);
-openBigPicture(userPictures[0]);
 
-// отображаю полноразмерное фото
-/* bigPicture.classList.remove('hidden'); */
+/*
+  Добавление возможности просмотра любой фотографии в полноразмерном режиме
+*/
 
-// прячу блок счётчика комментариев и блок загрузки новых комментариев
-bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
-bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
+// Прячу блок счётчика комментариев и блок загрузки новых комментариев
+var hideComments = function () {
+  bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
+  bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
+};
+
+// Ищу индекс элемента массива, который будет совпадать с url
+var findIndexByUrl = function (url) {
+  for (var i = 0; i < userPictures.length; i++) {
+    if (userPictures[i].url === url) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+/*
+Открытие и закрытие окна полноразмерного просмотра
+*/
+
+var showBigPicture = function () {
+  bigPicture.classList.remove('hidden');
+};
+
+var hideBigPicture = function () {
+  bigPicture.classList.add('hidden');
+};
+
+var onBicPictureEscPress = function (evt) {
+  if (isEscEvent(evt)) {
+    hideBigPicture();
+  }
+};
+
+bigPictureCloseButton.addEventListener('click', hideBigPicture);
+
+// Обработчик события для клика по фото
+var onPhotoClick = function (evt) {
+  var photoSource = evt.target.getAttribute('class') === 'picture'
+    ? evt.target.children[0].getAttribute('src')
+    : evt.target.getAttribute('src'); // Что писать в else если нечего, а проверка нужна?
+
+  var index = findIndexByUrl(photoSource);
+  if (index !== -1) {
+    showBigPicture();
+    openBigPicture(userPictures[index]);
+    hideComments();
+    document.addEventListener('keydown', onBicPictureEscPress);
+  }
+};
+
+// Добавляю обработчик событий всем превью фотографий
+var addBigPicEventListeners = function (pictures) {
+  for (var i = 0; i < pictures.length; i++) {
+    pictures[i].addEventListener('click', onPhotoClick);
+  }
+};
+
+addBigPicEventListeners(bigPictureThumbnails);
