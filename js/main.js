@@ -1,22 +1,19 @@
 'use strict';
 var picturesContainer = document.querySelector('.pictures');
-var openUploadButton = picturesContainer.querySelector('.img-upload__control');
 var inputPhotoUpload = picturesContainer.querySelector('#upload-file');
 var closeUploadButton = picturesContainer.querySelector('.img-upload__cancel'); // Маша, лучше искать по id, если есть возможность? Или по классу норм?
 var imagePreview = picturesContainer.querySelector('.img-upload__preview');
-var defaultImage = imagePreview.children[0];
+var uploadImage = imagePreview.children[0];
 var escKeyCode = 27;
+var hashtagsField = document.querySelector('.text__hashtags');
+// var commentsField = document.querySelector('.text__description');
+var uploadTextFieldset = document.querySelector('.img-upload__text');
 
 /*
 Загрузка изображения, открытие и закрытие формы редактирования
 */
 
 var onEditWindowEscPress = function (evt) {
-  if (evt.target === hashtagsField) { // Маша, почему, если я делаю эту проверку в конце этой функции, а не в начале как сейчас, то Esc все равно закрывает форму, если фокус на поле хештегов?
-    return;
-  } else if (evt.target === commentsField) {
-    return;
-  }
   if (isEscEvent(evt)) {
     closeUpload();
   }
@@ -26,10 +23,29 @@ var isEscEvent = function (evt) {
   return evt.keyCode === escKeyCode;
 };
 
+uploadTextFieldset.addEventListener('focusin', function () {
+  var textField = uploadTextFieldset.closest('input') || uploadTextFieldset.closest('textarea');
+  if (textField) {
+    document.removeEventListener('keydown', onEditWindowEscPress);
+  } else {
+    return;
+  }
+});
+
+uploadTextFieldset.addEventListener('focusout', function () {
+  var textField = uploadTextFieldset.closest('input') || uploadTextFieldset.closest('textarea');
+  if (textField) {
+    document.addEventListener('keydown', onEditWindowEscPress);
+  } else {
+    return;
+  }
+});
+
 var openUpload = function (evt) {
   evt.preventDefault();
   picturesContainer.querySelector('.img-upload__overlay').classList.remove('hidden');
   document.addEventListener('keydown', onEditWindowEscPress);
+  effectsList.addEventListener('click', onImageClick);
 };
 
 var closeUpload = function () {
@@ -37,12 +53,10 @@ var closeUpload = function () {
   inputPhotoUpload.value = '';
 };
 
-openUploadButton.addEventListener('click', function () {
-  inputPhotoUpload.addEventListener('change', function (evt) {
-    evt.preventDefault();
-    openUpload(evt);
-    onImageClick();
-  });
+inputPhotoUpload.addEventListener('change', function (evt) {
+  evt.preventDefault();
+  openUpload(evt);
+  onImageClick(evt);
 });
 
 closeUploadButton.addEventListener('click', function (evt) {
@@ -107,24 +121,22 @@ var effectRange = {
 
 // Проверяю количество классов у изображения и удаляю лишний
 var effectClassCheck = function () {
-  if (defaultImage.classList.length === 2) {
-    defaultImage.classList.remove(defaultImage.classList[0]);
+  if (uploadImage.classList.length === 2) {
+    uploadImage.classList.remove(uploadImage.classList[0]);
   }
 };
 
 // Добавляю проверку того, где произошёл клик и меняю фильтр
-var onImageClick = function () {
-  effectsList.addEventListener('click', function (evt) {
-    var targetImage = evt.target;
-    var effectRadio = targetImage.closest('input');
-    if (effectRadio) {
-      inputEffectLevel.value = effectRange.MAX;
-      defaultImage.classList.add(filters[effectRadio.value].CLASS);
-    } else {
-      return;
-    }
-    effectClassCheck();
-  });
+var onImageClick = function (evt) {
+  var targetImage = evt.target;
+  var effectRadio = targetImage.closest('input');
+  if (effectRadio) {
+    inputEffectLevel.value = effectRange.MAX;
+    uploadImage.classList.add(filters[effectRadio.value].CLASS);
+  } else {
+    return;
+  }
+  effectClassCheck();
 };
 
 /*
@@ -133,21 +145,17 @@ var onImageClick = function () {
 
 var uploadForm = document.querySelector('.img-upload__form');
 var submitButton = uploadForm.querySelector('.img-upload__submit');
-var hashtagsField = document.querySelector('.text__hashtags');
-var hashtagValue = hashtagsField.value || '';
-var hashtagList = hashtagValue.split(' ');
 var hashtagParams = {
   MIN: 2,
   MAX: 20
 };
 var hashtagIsValid = true;
-var commentsField = document.querySelector('.text__description');
 
 // Нахожу два одинаковых элемента в массиве хэштегов
 var checkDuplicates = function (hashtags, hashtag) {
   var duplicates = 0;
-  for (var i = 0; i < hashtagList.length; i++) {
-    if (hashtags[i].toLowerCase() === hashtag.toLowerCase()) {
+  for (var i = 0; i < hashtags.length; i++) {
+    if (hashtags[i] === hashtag) {
       duplicates++;
     }
   }
@@ -156,36 +164,38 @@ var checkDuplicates = function (hashtags, hashtag) {
 
 // Функция валидации хэштегов
 var checkHashValidity = function () {
-  hashtagsField.addEventListener('invalid', function (evt) {
-    evt.preventDefault();
-    hashtagIsValid = true;
-    if (hashtagList.length <= 5) {
-      for (var i = 0; i < hashtagList.length; i++) {
-        if (hashtagList[i].length < hashtagParams.MIN && hashtagList[i].charAt(0) === '#') {
-          hashtagsField.setCustomValidity('Хеш-тег не может состоять только из одной решётки');
-          hashtagIsValid = false;
-          return;
-        } else if (hashtagList[i].charAt(0) === '#') {
-          hashtagsField.setCustomValidity('Хэш-тег должен начинаться с символа # (решётка)');
-          hashtagIsValid = false;
-          return;
-        } else if (checkDuplicates(hashtagList, hashtagList[i]) > 1) {
-          hashtagsField.setCustomValidity('Один и тот же хэш-тег не может быть использован дважды');
-          hashtagIsValid = false;
-        } else if (hashtagList[i].length > hashtagParams.MAX) {
-          hashtagsField.setCustomValidity('Максимальная длина одного хэш-тега 20 символов, включая решётку;');
-          hashtagIsValid = false;
-          return;
-        } else {
-          hashtagsField.setCustomValidity('');
-        }
+  var hashtagValue = hashtagsField.value.toLowerCase() || '';
+  var hashtags = hashtagValue.split(' ');
+  hashtagIsValid = true;
+  if (hashtags.length > 0) {
+    for (var i = 0; i < hashtags.length; i++) {
+      if (hashtags[i].charAt(0) !== '#') {
+        hashtagsField.setCustomValidity('Хэш-тег должен начинаться с символа # (решётка).');
+        hashtagIsValid = false;
+        break;
+      } else if (hashtags[i].length < hashtagParams.MIN && hashtags[i].charAt(0) === '#') {
+        hashtagsField.setCustomValidity('Хеш-тег не может состоять только из одной решётки.');
+        hashtagIsValid = false;
+        break;
+      } else if (hashtags.length > 5) {
+        hashtagsField.setCustomValidity('Нельзя указать больше пяти хэш-тегов.');
+        hashtagIsValid = false;
+        break;
+      } else if (checkDuplicates(hashtags, hashtags[i]) > 1) {
+        hashtagsField.setCustomValidity('Один и тот же хэш-тег не может быть использован дважды.');
+        hashtagIsValid = false;
+        break;
+      } else if (hashtags[i].length > hashtagParams.MAX) {
+        hashtagsField.setCustomValidity('Максимальная длина одного хэш-тега 20 символов, включая решётку.');
+        hashtagIsValid = false;
+        break;
+      } else {
+        hashtagsField.setCustomValidity('');
       }
-    } else {
-      hashtagsField.setCustomValidity('Нельзя указать больше пяти хэш-тегов;');
-      hashtagIsValid = false;
-      return;
     }
-  });
+  } else {
+    hashtagsField.setCustomValidity('');
+  }
   return hashtagIsValid;
 };
 
@@ -240,7 +250,7 @@ var similarPictureTemplate = document.querySelector('#picture')
     .content
     .querySelector('.picture');
 // нахожу все миниатюры изображений
-var bigPictureThumbnails = document.querySelectorAll('.picture');
+// var bigPictureThumbnails = document.querySelectorAll('.picture');
 // нахожу секцию с полноразмерными фото
 var bigPicture = document.querySelector('.big-picture');
 // Х-кнопка закрытия полноразмерного фото
@@ -301,14 +311,42 @@ var generatePictures = function (amount) {
 // Создаю массив с другими фотографиями
 var userPictures = generatePictures(PICTURES_AMOUNT);
 
+/*
+  Добавление возможности просмотра любой фотографии в полноразмерном режиме, реализация открытия и закрытия окна полноразмерного просмотра
+*/
+
 var createPicture = function (pictures) {
   var pictureElement = similarPictureTemplate.cloneNode(true);
   pictureElement.querySelector('.picture__img').src = pictures.url;
   pictureElement.querySelector('.picture__img').alt = pictures.description;
   pictureElement.querySelector('.picture__comments').textContent = pictures.comments.length;
   pictureElement.querySelector('.picture__likes').textContent = pictures.like;
-
+  pictureElement.addEventListener('click', function () {
+    openBigPicture(pictures); // либо сразу openBigPicture(pictures), а внутри нее вызвать все сопутствующие функции
+  });
   return pictureElement;
+};
+
+var showBigPicture = function () {
+  bigPicture.classList.remove('hidden');
+};
+
+var hideBigPicture = function () {
+  bigPicture.classList.add('hidden');
+};
+
+var onBicPictureEscPress = function (evt) {
+  if (isEscEvent(evt)) {
+    hideBigPicture();
+  }
+};
+
+bigPictureCloseButton.addEventListener('click', hideBigPicture);
+
+// Прячу блок счётчика комментариев и блок загрузки новых комментариев
+var hideComments = function () {
+  bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
+  bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
 };
 
 // Создаю фрагмент с фотографиями, добавляю в него картинки и всё разом - в DOM
@@ -351,70 +389,9 @@ var openBigPicture = function (pictures) {
   bigPicture.querySelector('.comments-count').textContent = pictures.comments.length;
   bigPicture.querySelector('.social__caption').textContent = pictures.description;
   commentsContainer.appendChild(getComments(pictures.comments));
+  showBigPicture();
+  hideComments();
+  document.addEventListener('keydown', onBicPictureEscPress);
 };
 
 renderPictures(userPictures);
-
-/*
-  Добавление возможности просмотра любой фотографии в полноразмерном режиме
-*/
-
-// Прячу блок счётчика комментариев и блок загрузки новых комментариев
-var hideComments = function () {
-  bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
-  bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
-};
-
-// Ищу индекс элемента массива, который будет совпадать с url
-var findIndexByUrl = function (url) {
-  for (var i = 0; i < userPictures.length; i++) {
-    if (userPictures[i].url === url) {
-      return i;
-    }
-  }
-  return -1;
-};
-
-/*
-Открытие и закрытие окна полноразмерного просмотра
-*/
-
-var showBigPicture = function () {
-  bigPicture.classList.remove('hidden');
-};
-
-var hideBigPicture = function () {
-  bigPicture.classList.add('hidden');
-};
-
-var onBicPictureEscPress = function (evt) {
-  if (isEscEvent(evt)) {
-    hideBigPicture();
-  }
-};
-
-bigPictureCloseButton.addEventListener('click', hideBigPicture);
-
-// Обработчик события для клика по фото
-var onPhotoClick = function (evt) {
-  var photoSource = evt.target.getAttribute('class') === 'picture'
-    ? evt.target.children[0].getAttribute('src')
-    : evt.target.getAttribute('src'); // Что писать в else если нечего, а проверка нужна?
-
-  var index = findIndexByUrl(photoSource);
-  if (index !== -1) {
-    showBigPicture();
-    openBigPicture(userPictures[index]);
-    hideComments();
-    document.addEventListener('keydown', onBicPictureEscPress);
-  }
-};
-
-// Добавляю обработчик событий всем превью фотографий
-var addBigPicEventListeners = function (pictures) {
-  for (var i = 0; i < pictures.length; i++) {
-    pictures[i].addEventListener('click', onPhotoClick);
-  }
-};
-
-addBigPicEventListeners(bigPictureThumbnails);
