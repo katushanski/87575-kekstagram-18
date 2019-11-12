@@ -24,21 +24,11 @@ var isEscEvent = function (evt) {
 };
 
 uploadTextFieldset.addEventListener('focusin', function () {
-  var textField = uploadTextFieldset.closest('input') || uploadTextFieldset.closest('textarea');
-  if (textField) {
-    document.removeEventListener('keydown', onEditWindowEscPress);
-  } else {
-    return;
-  }
+  document.removeEventListener('keydown', onEditWindowEscPress);
 });
 
 uploadTextFieldset.addEventListener('focusout', function () {
-  var textField = uploadTextFieldset.closest('input') || uploadTextFieldset.closest('textarea');
-  if (textField) {
-    document.addEventListener('keydown', onEditWindowEscPress);
-  } else {
-    return;
-  }
+  document.addEventListener('keydown', onEditWindowEscPress);
 });
 
 var openUpload = function (evt) {
@@ -56,7 +46,6 @@ var closeUpload = function () {
 inputPhotoUpload.addEventListener('change', function (evt) {
   evt.preventDefault();
   openUpload(evt);
-  onImageClick(evt);
 });
 
 closeUploadButton.addEventListener('click', function (evt) {
@@ -119,24 +108,14 @@ var effectRange = {
   MAX: 100
 };
 
-// Проверяю количество классов у изображения и удаляю лишний
-var effectClassCheck = function () {
-  if (uploadImage.classList.length === 2) {
-    uploadImage.classList.remove(uploadImage.classList[0]);
-  }
-};
-
 // Добавляю проверку того, где произошёл клик и меняю фильтр
 var onImageClick = function (evt) {
   var targetImage = evt.target;
   var effectRadio = targetImage.closest('input');
   if (effectRadio) {
     inputEffectLevel.value = effectRange.MAX;
-    uploadImage.classList.add(filters[effectRadio.value].CLASS);
-  } else {
-    return;
+    uploadImage.className = filters[effectRadio.value].CLASS;
   }
-  effectClassCheck();
 };
 
 /*
@@ -149,7 +128,6 @@ var hashtagParams = {
   MIN: 2,
   MAX: 20
 };
-var hashtagIsValid = true;
 
 // Нахожу два одинаковых элемента в массиве хэштегов
 var checkDuplicates = function (hashtags, hashtag) {
@@ -162,56 +140,51 @@ var checkDuplicates = function (hashtags, hashtag) {
   return duplicates;
 };
 
-// Функция валидации хэштегов
+// Валидация хэштегов
 var checkHashValidity = function () {
   var hashtagValue = hashtagsField.value.toLowerCase() || '';
   var hashtags = hashtagValue.split(' ');
-  hashtagIsValid = true;
+  var customValidityMessage = '';
   if (hashtags.length > 0) {
     for (var i = 0; i < hashtags.length; i++) {
       if (hashtags[i].charAt(0) !== '#') {
-        hashtagsField.setCustomValidity('Хэш-тег должен начинаться с символа # (решётка).');
-        hashtagIsValid = false;
+        customValidityMessage = 'Хэш-тег должен начинаться с символа # (решётка).';
         break;
       } else if (hashtags[i].length < hashtagParams.MIN && hashtags[i].charAt(0) === '#') {
-        hashtagsField.setCustomValidity('Хеш-тег не может состоять только из одной решётки.');
-        hashtagIsValid = false;
+        customValidityMessage = 'Хеш-тег не может состоять только из одной решётки.';
         break;
       } else if (hashtags.length > 5) {
-        hashtagsField.setCustomValidity('Нельзя указать больше пяти хэш-тегов.');
-        hashtagIsValid = false;
+        customValidityMessage = 'Нельзя указать больше пяти хэш-тегов.';
         break;
       } else if (checkDuplicates(hashtags, hashtags[i]) > 1) {
-        hashtagsField.setCustomValidity('Один и тот же хэш-тег не может быть использован дважды.');
-        hashtagIsValid = false;
+        customValidityMessage = 'Один и тот же хэш-тег не может быть использован дважды.';
         break;
       } else if (hashtags[i].length > hashtagParams.MAX) {
-        hashtagsField.setCustomValidity('Максимальная длина одного хэш-тега 20 символов, включая решётку.');
-        hashtagIsValid = false;
+        customValidityMessage = 'Максимальная длина одного хэш-тега 20 символов, включая решётку.';
         break;
       } else {
         hashtagsField.setCustomValidity('');
       }
     }
   } else {
-    hashtagsField.setCustomValidity('');
+    customValidityMessage = null;
   }
-  return hashtagIsValid;
+  hashtagsField.setCustomValidity(customValidityMessage);
+};
+
+hashtagsField.addEventListener('input', checkHashValidity);
+
+var onSubmitButtonClick = function (evt) {
+  if (!hashtagsField.validity.valid) {
+    hashtagsField.style.outline = '3px solid red';
+    evt.preventDefault();
+  } else {
+    hashtagsField.style.outline = '';
+  }
 };
 
 // Добавляю слушатель события на кнопку "Опубликовать"
-var onSubmitClick = function () {
-  uploadForm.addEventListener('submit', function (evt) {
-    if (!checkHashValidity()) {
-      evt.preventDefault();
-      hashtagsField.style.outline = '3px solid red';
-    } else {
-      hashtagsField.style.outline = '';
-    }
-  });
-};
-
-submitButton.addEventListener('click', onSubmitClick);
+submitButton.addEventListener('click', onSubmitButtonClick);
 
 /*
 Отображение фотографий других пользователей, лайков и комментариев
