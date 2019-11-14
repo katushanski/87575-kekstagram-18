@@ -129,23 +129,12 @@ var hashtagParams = {
   MAX: 20
 };
 
-// Нахожу два одинаковых элемента в массиве хэштегов
-var checkDuplicates = function (hashtags, hashtag) {
-  var duplicates = 0;
-  for (var i = 0; i < hashtags.length; i++) {
-    if (hashtags[i] === hashtag) {
-      duplicates++;
-    }
-  }
-  return duplicates;
-};
-
 // Валидация хэштегов
 var checkHashValidity = function () {
-  var hashtagValue = hashtagsField.value.toLowerCase() || '';
+  var hashtagValue = hashtagsField.value.trim().toLowerCase() || '';
   var hashtags = hashtagValue.split(' ');
   var customValidityMessage = '';
-  if (hashtags.length > 0) {
+  if (hashtagValue !== '') {
     for (var i = 0; i < hashtags.length; i++) {
       if (hashtags[i].charAt(0) !== '#') {
         customValidityMessage = 'Хэш-тег должен начинаться с символа # (решётка).';
@@ -156,31 +145,29 @@ var checkHashValidity = function () {
       } else if (hashtags.length > 5) {
         customValidityMessage = 'Нельзя указать больше пяти хэш-тегов.';
         break;
-      } else if (checkDuplicates(hashtags, hashtags[i]) > 1) {
+      } else if (hashtags.indexOf(hashtags[i]) !== i) { // Нахожу два одинаковых элемента в массиве хэштегов
         customValidityMessage = 'Один и тот же хэш-тег не может быть использован дважды.';
         break;
       } else if (hashtags[i].length > hashtagParams.MAX) {
         customValidityMessage = 'Максимальная длина одного хэш-тега 20 символов, включая решётку.';
         break;
-      } else {
-        hashtagsField.setCustomValidity('');
       }
     }
   } else {
-    customValidityMessage = null;
+    customValidityMessage = '';
+    hashtagsField.style.outline = '';
   }
   hashtagsField.setCustomValidity(customValidityMessage);
 };
 
+// Добавляю слушатель события на ввод, таким образом при каждом изменении поля ввода будет совершаться проверка
 hashtagsField.addEventListener('input', checkHashValidity);
 
-var onSubmitButtonClick = function (evt) {
-  if (!hashtagsField.validity.valid) {
+// Добавляю слушатель события на кнопку "Опубликовать"
+var onSubmitButtonClick = function () {
+  hashtagsField.addEventListener('invalid', function () {
     hashtagsField.style.outline = '3px solid red';
-    evt.preventDefault();
-  } else {
-    hashtagsField.style.outline = '';
-  }
+  });
 };
 
 // Добавляю слушатель события на кнопку "Опубликовать"
