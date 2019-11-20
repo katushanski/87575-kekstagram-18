@@ -4,12 +4,15 @@
   /*
   Валидация хэштегов и отправка формы
   */
-  var hashtagsField = document.querySelector('.text__hashtags');
-  var commentField = document.querySelector('.text__description');
+
   var hashtagParams = {
     MIN: 2,
     MAX: 20
   };
+  var uploadForm = document.querySelector('.img-upload__form');
+  var submitButton = uploadForm.querySelector('.img-upload__submit');
+  var hashtagsField = document.querySelector('.text__hashtags');
+  var commentField = document.querySelector('.text__description');
   var commentMaxLength = 140;
 
   // Валидация хэштегов
@@ -62,10 +65,17 @@
   hashtagsField.addEventListener('input', checkHashValidity);
   commentField.addEventListener('input', checkCommentValidity);
 
-  window.validation = {
-    hashtagsField: hashtagsField,
-    commentField: commentField,
-    checkHashValidity: checkHashValidity,
-    checkCommentValidity: checkCommentValidity
+  // Добавляю слушатель события на кнопку "Опубликовать"
+  var onSubmitButtonClick = function () {
+
+    hashtagsField.addEventListener('invalid', function () {
+      hashtagsField.style.outline = '3px solid red';
+    });
+    commentField.addEventListener('invalid', function () {
+      commentField.style.outline = '3px solid red';
+    });
   };
+
+  // Добавляю слушатель события на кнопку "Опубликовать"
+  submitButton.addEventListener('click', onSubmitButtonClick);
 })();

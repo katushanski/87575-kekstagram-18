@@ -41,6 +41,6 @@
   renderPictures(window.data.userPictures);
 
   window.pictures = {
-    renderPictures: renderPictures
+    render: renderPictures
   };
 })();

@@ -1,19 +1,48 @@
 'use strict';
 
 (function () {
-  var uploadForm = document.querySelector('.img-upload__form');
-  var submitButton = uploadForm.querySelector('.img-upload__submit');
+  /*
+  Загрузка изображения, открытие и закрытие формы редактирования
+  */
+  var uploadOverlay = document.querySelector('.img-upload__overlay');
+  var uploadTextFieldset = document.querySelector('.img-upload__text');
+  var inputPhotoUpload = document.querySelector('#upload-file');
+  var closeUploadButton = document.querySelector('.img-upload__cancel');
 
-  // Добавляю слушатель события на кнопку "Опубликовать"
-  var onSubmitButtonClick = function () {
-    window.validation.hashtagsField.addEventListener('invalid', function () {
-      window.validation.hashtagsField.style.outline = '3px solid red';
-    });
-    window.validation.commentField.addEventListener('invalid', function () {
-      window.validation.commentField.style.outline = '3px solid red';
-    });
+  var onEditWindowEscPress = function (evt) {
+    if (window.util.isEscEvent(evt)) {
+      closeUpload();
+    }
   };
 
-  // Добавляю слушатель события на кнопку "Опубликовать"
-  submitButton.addEventListener('click', onSubmitButtonClick);
+  var openUpload = function (evt) {
+    evt.preventDefault();
+    uploadOverlay.classList.remove('hidden');
+    document.addEventListener('keydown', onEditWindowEscPress);
+    window.effects.init();
+  };
+
+  var closeUpload = function () {
+    uploadOverlay.classList.add('hidden');
+    inputPhotoUpload.value = '';
+    window.effects.reset();
+  };
+
+  inputPhotoUpload.addEventListener('change', function (evt) {
+    evt.preventDefault();
+    openUpload(evt);
+  });
+
+  uploadTextFieldset.addEventListener('focusin', function () {
+    document.removeEventListener('keydown', onEditWindowEscPress);
+  });
+
+  uploadTextFieldset.addEventListener('focusout', function () {
+    document.addEventListener('keydown', onEditWindowEscPress);
+  });
+
+  closeUploadButton.addEventListener('click', function (evt) {
+    evt.preventDefault();
+    closeUpload();
+  });
 })();
