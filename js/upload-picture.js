@@ -4,12 +4,10 @@
   /*
   Загрузка изображения, открытие и закрытие формы редактирования
   */
-
-  var picturesContainer = document.querySelector('.pictures');
-  var effectsList = picturesContainer.querySelector('.effects__list');
+  var uploadOverlay = document.querySelector('.img-upload__overlay');
   var uploadTextFieldset = document.querySelector('.img-upload__text');
-  var inputPhotoUpload = picturesContainer.querySelector('#upload-file');
-  var closeUploadButton = picturesContainer.querySelector('.img-upload__cancel');
+  var inputPhotoUpload = document.querySelector('#upload-file');
+  var closeUploadButton = document.querySelector('.img-upload__cancel');
 
   var onEditWindowEscPress = function (evt) {
     if (window.util.isEscEvent(evt)) {
@@ -19,14 +17,15 @@
 
   var openUpload = function (evt) {
     evt.preventDefault();
-    picturesContainer.querySelector('.img-upload__overlay').classList.remove('hidden');
+    uploadOverlay.classList.remove('hidden');
     document.addEventListener('keydown', onEditWindowEscPress);
-    effectsList.addEventListener('click', window.photoEffects.onImageClick);
+    window.effects.init();
   };
 
   var closeUpload = function () {
-    picturesContainer.querySelector('.img-upload__overlay').classList.add('hidden');
+    uploadOverlay.classList.add('hidden');
     inputPhotoUpload.value = '';
+    window.effects.reset();
   };
 
   inputPhotoUpload.addEventListener('change', function (evt) {
@@ -46,9 +45,4 @@
     evt.preventDefault();
     closeUpload();
   });
-
-  window.uploadPicture = {
-    picturesContainer: picturesContainer,
-    effectsList: effectsList
-  };
 })();

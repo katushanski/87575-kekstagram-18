@@ -1,7 +1,7 @@
 'use strict';
 
 (function () {
-  var escKeyCode = 27;
+  var ESC = 27;
 
   // функция, которая генерирует случайное число в определенном диапазоне (для лайков)
   var getRandomNumber = function (min, max) {
@@ -9,11 +9,10 @@
   };
 
   var isEscEvent = function (evt) {
-    return evt.keyCode === escKeyCode;
+    return evt.keyCode === ESC;
   };
 
   window.util = {
-    escKeyCode: escKeyCode,
     getRandomNumber: getRandomNumber,
     isEscEvent: isEscEvent
   };

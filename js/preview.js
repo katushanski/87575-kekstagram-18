@@ -2,6 +2,41 @@
 
 (function () {
   /*
+  Отображение комментов
+  */
+  // шаблон коммента
+  var commentTemplate = document.querySelector('#comment')
+      .content
+      .querySelector('.social__comment');
+
+  // Создаю фрагмент с комментариями и добавляю его в DOM
+  var getComments = function (comments) { // передали в функцию сгенерированные ранее комментарии
+    var fragment = document.createDocumentFragment(); // создали фрагмент
+    // используем цикл forEach тк идем по всей длине массива
+    comments.forEach(function (comment) {
+      // склонировали элемент комментария
+      var commentElement = commentTemplate.cloneNode(true);
+      // нашли элемент картинки внутри элемента комментария
+      var commentImgElement = commentElement.querySelector('img');
+      // нашли абзац
+      var commentTextElement = commentElement.querySelector('p');
+      // используем укороченную запись, тк используем forEach и i не нужен
+      commentImgElement.src = comment.avatar;
+      commentImgElement.alt = comment.name;
+      commentTextElement.textContent = comment.message;
+      // добавляем элемент комментария в фрагмент
+      fragment.appendChild(commentElement);
+    });
+    // возвращаем фрагмент со всеми добавленными комментариями
+    return fragment;
+  };
+
+  // Прячу блок счётчика комментариев и блок загрузки новых комментариев
+  var hideComments = function () {
+    bigPicture.querySelector('.social__comment-count').classList.add('visually-hidden');
+    bigPicture.querySelector('.comments-loader').classList.add('visually-hidden');
+  };
+  /*
   Отображение полноразмерных фотографий других пользователей
   */
 
@@ -34,17 +69,14 @@
     bigPicture.querySelector('.comments-count').textContent = picture.comments.length;
     bigPicture.querySelector('.social__caption').textContent = picture.description;
     commentsContainer.innerHTML = '';
-    commentsContainer.appendChild(window.picture.getComments(picture.comments));
+    commentsContainer.appendChild(getComments(picture.comments));
     showBigPicture();
-    window.picture.hideComments();
+    hideComments();
     document.addEventListener('keydown', onBicPictureEscPress);
   };
   bigPictureCloseButton.addEventListener('click', hideBigPicture);
 
-  window.picture.renderPictures(window.picture.userPictures);
-
   window.preview = {
-    bigPicture: bigPicture,
-    openBigPicture: openBigPicture
+    open: openBigPicture
   };
 })();
