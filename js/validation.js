@@ -65,17 +65,10 @@
   hashtagsField.addEventListener('input', checkHashValidity);
   commentField.addEventListener('input', checkCommentValidity);
 
-  // Добавляю слушатель события на кнопку "Опубликовать"
-  var onSubmitButtonClick = function () {
-
-    hashtagsField.addEventListener('invalid', function () {
+  hashtagsField.addEventListener('invalid', function () {
       hashtagsField.style.outline = '3px solid red';
     });
-    commentField.addEventListener('invalid', function () {
-      commentField.style.outline = '3px solid red';
-    });
-  };
-
-  // Добавляю слушатель события на кнопку "Опубликовать"
-  submitButton.addEventListener('click', onSubmitButtonClick);
+  commentField.addEventListener('invalid', function () {
+    commentField.style.outline = '3px solid red';
+  });
 })();
