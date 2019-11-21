@@ -9,8 +9,6 @@
     MIN: 2,
     MAX: 20
   };
-  var uploadForm = document.querySelector('.img-upload__form');
-  var submitButton = uploadForm.querySelector('.img-upload__submit');
   var hashtagsField = document.querySelector('.text__hashtags');
   var commentField = document.querySelector('.text__description');
   var commentMaxLength = 140;
@@ -66,8 +64,8 @@
   commentField.addEventListener('input', checkCommentValidity);
 
   hashtagsField.addEventListener('invalid', function () {
-      hashtagsField.style.outline = '3px solid red';
-    });
+    hashtagsField.style.outline = '3px solid red';
+  });
   commentField.addEventListener('invalid', function () {
     commentField.style.outline = '3px solid red';
   });
