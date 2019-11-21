@@ -1,197 +1,4 @@
 'use strict';
-var picturesContainer = document.querySelector('.pictures');
-var inputPhotoUpload = picturesContainer.querySelector('#upload-file');
-var closeUploadButton = picturesContainer.querySelector('.img-upload__cancel'); // Маша, лучше искать по id, если есть возможность? Или по классу норм?
-var imagePreview = picturesContainer.querySelector('.img-upload__preview');
-var uploadImage = imagePreview.children[0];
-var escKeyCode = 27;
-var hashtagsField = document.querySelector('.text__hashtags');
-var commentField = document.querySelector('.text__description');
-var uploadTextFieldset = document.querySelector('.img-upload__text');
-
-/*
-Загрузка изображения, открытие и закрытие формы редактирования
-*/
-
-var onEditWindowEscPress = function (evt) {
-  if (isEscEvent(evt)) {
-    closeUpload();
-  }
-};
-
-var isEscEvent = function (evt) {
-  return evt.keyCode === escKeyCode;
-};
-
-uploadTextFieldset.addEventListener('focusin', function () {
-  document.removeEventListener('keydown', onEditWindowEscPress);
-});
-
-uploadTextFieldset.addEventListener('focusout', function () {
-  document.addEventListener('keydown', onEditWindowEscPress);
-});
-
-var openUpload = function (evt) {
-  evt.preventDefault();
-  picturesContainer.querySelector('.img-upload__overlay').classList.remove('hidden');
-  document.addEventListener('keydown', onEditWindowEscPress);
-  effectsList.addEventListener('click', onImageClick);
-};
-
-var closeUpload = function () {
-  picturesContainer.querySelector('.img-upload__overlay').classList.add('hidden');
-  inputPhotoUpload.value = '';
-};
-
-inputPhotoUpload.addEventListener('change', function (evt) {
-  evt.preventDefault();
-  openUpload(evt);
-});
-
-closeUploadButton.addEventListener('click', function (evt) {
-  evt.preventDefault();
-  closeUpload();
-});
-
-/*
-Применение эффекта для изображения
-*/
-
-var effectLevel = document.querySelector('.effect-level');
-// var sliderPin = effectLevel.querySelector('.effect-level__pin'); // ползунок
-var inputEffectLevel = effectLevel.querySelector('.effect-level__value');
-var effectsList = picturesContainer.querySelector('.effects__list');
-var filters = {
-  none: {
-    CLASS: 'effects__preview--none',
-    PROPERTY: 'none'
-  },
-  chrome: {
-    CLASS: 'effects__preview--chrome',
-    PROPERTY: 'grayscale',
-    MIN_VALUE: 0,
-    MAX_VALUE: 1,
-    UNIT: ''
-  },
-  sepia: {
-    CLASS: 'effects__preview--sepia',
-    PROPERTY: 'sepia',
-    MIN_VALUE: 0,
-    MAX_VALUE: 1,
-    UNIT: ''
-  },
-  marvin: {
-    CLASS: 'effects__preview--marvin',
-    PROPERTY: 'invert',
-    MIN_VALUE: 0,
-    MAX_VALUE: 100,
-    UNIT: '%'
-  },
-  phobos: {
-    CLASS: 'effects__preview--phobos',
-    PROPERTY: 'blur',
-    MIN_VALUE: 0,
-    MAX_VALUE: 3,
-    UNIT: 'px'
-  },
-  heat: {
-    CLASS: 'effects__preview--heat',
-    PROPERTY: 'brightness',
-    MIN_VALUE: 1,
-    MAX_VALUE: 3,
-    UNIT: ''
-  }
-};
-
-var effectRange = {
-  MIN: 0,
-  MAX: 100
-};
-
-// Добавляю проверку того, где произошёл клик и меняю фильтр
-var onImageClick = function (evt) {
-  var targetImage = evt.target;
-  var effectRadio = targetImage.closest('input');
-  if (effectRadio) {
-    inputEffectLevel.value = effectRange.MAX;
-    uploadImage.className = filters[effectRadio.value].CLASS;
-  }
-};
-
-/*
-Валидация хэштегов и отправка формы
-*/
-
-var uploadForm = document.querySelector('.img-upload__form');
-var submitButton = uploadForm.querySelector('.img-upload__submit');
-var hashtagParams = {
-  MIN: 2,
-  MAX: 20
-};
-var commentMaxLength = 140;
-
-// Валидация хэштегов
-var checkHashValidity = function () {
-  var hashtagValue = hashtagsField.value.trim().toLowerCase() || '';
-  var hashtags = hashtagValue.split(' ');
-  var customValidityMessage = '';
-  if (hashtagValue !== '') {
-    for (var i = 0; i < hashtags.length; i++) {
-      if (hashtags[i].charAt(0) !== '#') {
-        customValidityMessage = 'Хэш-тег должен начинаться с символа # (решётка).';
-        break;
-      } else if (hashtags[i].length < hashtagParams.MIN && hashtags[i].charAt(0) === '#') {
-        customValidityMessage = 'Хеш-тег не может состоять только из одной решётки.';
-        break;
-      } else if (hashtags.length > 5) {
-        customValidityMessage = 'Нельзя указать больше пяти хэш-тегов.';
-        break;
-      } else if (hashtags.indexOf(hashtags[i]) !== i) { // Нахожу два одинаковых элемента в массиве хэштегов
-        customValidityMessage = 'Один и тот же хэш-тег не может быть использован дважды.';
-        break;
-      } else if (hashtags[i].length > hashtagParams.MAX) {
-        customValidityMessage = 'Максимальная длина одного хэш-тега 20 символов, включая решётку.';
-        break;
-      }
-    }
-  } else {
-    customValidityMessage = '';
-    hashtagsField.style.outline = '';
-  }
-  hashtagsField.setCustomValidity(customValidityMessage);
-};
-
-// Валидация комментов
-var checkCommentValidity = function () {
-  var commentValue = commentField.value;
-  var customValidityMessage = '';
-  if (commentValue !== '') {
-    if (commentValue.length > commentMaxLength) {
-      customValidityMessage = 'Длина комментария не может составлять больше 140 символов';
-    } else {
-      customValidityMessage = '';
-      commentField.style.outline = '';
-    }
-  }
-  commentField.setCustomValidity(customValidityMessage);
-};
-
-// Добавляю слушатель события на ввод, таким образом при каждом изменении поля ввода будет совершаться проверка
-hashtagsField.addEventListener('input', checkHashValidity);
-commentField.addEventListener('input', checkCommentValidity);
-
-// Добавляю слушатель события на кнопку "Опубликовать"
-var onSubmitButtonClick = function () {
-  hashtagsField.addEventListener('invalid', function () {
-    hashtagsField.style.outline = '3px solid red';
-  });
-  commentField.addEventListener('invalid', function () {
-    commentField.style.outline = '3px solid red';
-  });
-};
-
-// Добавляю слушатель события на кнопку "Опубликовать"
-submitButton.addEventListener('click', onSubmitButtonClick);
 
 /*
 Отображение фотографий других пользователей, лайков и комментариев
@@ -242,17 +49,13 @@ var commentTemplate = document.querySelector('#comment')
     .content
     .querySelector('.social__comment');
 
-// функция, которая генерирует случайное число в определенном диапазоне (для лайков)
-var getRandomNumber = function (min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
 
 // Генерирую строку, состоящую из одного или двух комментариев
 var generateComment = function () {
   var comment = '';
-  var commentsNumber = getRandomNumber(1, 2);
+  var commentsNumber = window.util.getRandomNumber(1, 2);
   for (var i = 0; i < commentsNumber; i++) {
-    var commentRandom = COMMENTS[getRandomNumber(0, COMMENTS.length - 1)];
+    var commentRandom = COMMENTS[window.util.getRandomNumber(0, COMMENTS.length - 1)];
     comment += commentRandom;
   }
   return comment;
@@ -261,11 +64,11 @@ var generateComment = function () {
 // Создаю массив с полноценными комментариями, состоящих из текста и параметров пользователя (аватар, имя)
 var renderComments = function () {
   var comments = [];
-  var amount = getRandomNumber(1, COMMENTS.length - 1);
+  var amount = window.util.getRandomNumber(1, COMMENTS.length - 1);
   for (var j = 0; j < amount; j++) {
     var comment = {
-      avatar: 'img/avatar-' + getRandomNumber(avatarIndex.MIN, avatarIndex.MAX) + '.svg',
-      name: NAMES[getRandomNumber(0, NAMES.length - 1)],
+      avatar: 'img/avatar-' + window.util.getRandomNumber(avatarIndex.MIN, avatarIndex.MAX) + '.svg',
+      name: NAMES[window.util.getRandomNumber(0, NAMES.length - 1)],
       message: generateComment()
     };
     comments.push(comment);
@@ -279,8 +82,8 @@ var generatePictures = function (amount) {
   for (var k = 0; k < amount; k++) {
     var picture = {
       url: 'photos/' + (k + 1) + '.jpg',
-      description: DESCRIPTIONS[getRandomNumber(0, DESCRIPTIONS.length - 1)],
-      like: getRandomNumber(likes.MIN, likes.MAX),
+      description: DESCRIPTIONS[window.util.getRandomNumber(0, DESCRIPTIONS.length - 1)],
+      like: window.util.getRandomNumber(likes.MIN, likes.MAX),
       comments: renderComments()
     };
     pictures.push(picture);
@@ -302,7 +105,7 @@ var createPicture = function (picture) {
   pictureElement.querySelector('.picture__comments').textContent = picture.comments.length;
   pictureElement.querySelector('.picture__likes').textContent = picture.like;
   pictureElement.addEventListener('click', function () {
-    openBigPicture(picture); // либо сразу openBigPicture(pictures), а внутри нее вызвать все сопутствующие функции
+    openBigPicture(picture);
   });
   return pictureElement;
 };
@@ -316,7 +119,7 @@ var hideBigPicture = function () {
 };
 
 var onBicPictureEscPress = function (evt) {
-  if (isEscEvent(evt)) {
+  if (window.util.isEscEvent(evt)) {
     hideBigPicture();
   }
 };
@@ -337,7 +140,7 @@ var renderPictures = function (picturesFragment) {
     fragment.appendChild(createPicture(picture));
   });
 
-  picturesContainer.appendChild(fragment);
+  window.uploadPicture.picturesContainer.appendChild(fragment);
 };
 
 // Создаю фрагмент с комментариями и добавляю его в DOM
